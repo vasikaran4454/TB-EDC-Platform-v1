@@ -2,8 +2,9 @@
 const express=require('express'),{DatabaseSync}=require('node:sqlite'),bcrypt=require('bcryptjs'),jwt=require('jsonwebtoken'),cookie=require('cookie-parser'),fs=require('fs'),path=require('path');
 const PORT=process.env.PORT||3000,SECRET=process.env.JWT_SECRET||'dev-only-change-me',PROD=process.env.NODE_ENV==='production';
 if(PROD&&SECRET==='dev-only-change-me'){console.error('Set JWT_SECRET in production.');process.exit(1)}
-fs.mkdirSync(path.join(__dirname,'data'),{recursive:true});
-const db=new DatabaseSync(process.env.DB_FILE||path.join(__dirname,'data','edc.db'));db.exec('PRAGMA journal_mode=WAL');
+const DBF=process.env.DB_FILE||path.join(__dirname,'data','edc.db');
+fs.mkdirSync(path.dirname(DBF),{recursive:true});
+const db=new DatabaseSync(DBF);db.exec('PRAGMA journal_mode=WAL');
 const tx=fn=>{db.exec('BEGIN');try{fn();db.exec('COMMIT')}catch(e){try{db.exec('ROLLBACK')}catch(_){}throw e}};
 db.exec(`create table if not exists users(username text primary key,hash text not null,name text,role text,title text,initials text,admin integer default 0);
 create table if not exists subjects(id text primary key,data text not null);
@@ -21,10 +22,13 @@ const chk=o=>{if(!o||typeof o.id!=='string'||!o.id||o.id.length>100)throw E(400,
 const get=(t,id)=>{const r=db.prepare(`select data from ${t} where id=?`).get(id);return r?JSON.parse(r.data):null};
 const up=(t,o)=>db.prepare(`insert into ${t}(id,data) values(?,?) on conflict(id) do update set data=excluded.data`).run(o.id,JSON.stringify(o));
 
-const BK=path.join(__dirname,'data','backups');fs.mkdirSync(BK,{recursive:true});
+// Backups live next to the database file, so on hosting they sit on the persistent disk too.
+const BK=path.join(path.dirname(DBF),'backups');fs.mkdirSync(BK,{recursive:true});
 function backup(){try{const d=new Date(),f=path.join(BK,'edc-'+d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+'-'+p2(d.getHours())+p2(d.getMinutes())+'.db');if(!fs.existsSync(f))db.exec("VACUUM INTO '"+f.replace(/'/g,"''")+"'");fs.readdirSync(BK).filter(x=>x.endsWith('.db')).sort().slice(0,-14).forEach(x=>fs.unlinkSync(path.join(BK,x)))}catch(e){console.error('Backup failed:',e.message)}}
 backup();setInterval(backup,6*3600*1000).unref();
-const app=express();app.disable('x-powered-by');app.use((q,r,n)=>{r.set({'X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'same-origin','Content-Security-Policy':"default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; frame-ancestors 'none'"});n()});
+const app=express();app.disable('x-powered-by');
+if(PROD)app.set('trust proxy',1); // hosting proxy (Render etc.) - makes req.ip the real client IP for login lockout
+app.use((q,r,n)=>{r.set({'X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'same-origin','Content-Security-Policy':"default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; frame-ancestors 'none'"});n()});
 app.use(express.json({limit:'2mb'}));app.use(cookie());
 const auth=(req,res,next)=>{try{req.u=jwt.verify(req.cookies.t,SECRET);next()}catch(e){res.status(401).json({error:'Please sign in.'})}};
 const fail=(res,c,m)=>res.status(c).json({error:m});
