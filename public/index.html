@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TimeBoundary EDC Platform</title>
+<meta name="description" content="TimeBoundary EDC Platform: practice electronic data capture with eCRFs, edit checks, queries and an audit trail.">
+<link rel="icon" href="mark.png"><link rel="stylesheet" href="branding.css">
+<style>
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit}h1,h2,h3{margin:0 0 .5rem}.mute{color:var(--mute);font-size:13px}.scroll{overflow-x:auto}
+#loginScreen{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+.login-left{color:#cfd6e4;padding:48px;display:flex;flex-direction:column;justify-content:center}
+.login-left p{max-width:440px}.login-feature{display:flex;gap:10px;margin:.4rem 0}.login-feature .ico{background:rgba(226,181,80,.18);color:var(--accent);border-radius:8px;width:28px;height:28px;display:grid;place-items:center;flex:none}
+.login-right{display:grid;place-items:center;padding:32px}.login-box{width:100%;max-width:380px}
+.role-tabs{display:flex;gap:6px;margin:12px 0}.role-tabs button{flex:1;padding:8px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer}.role-tabs button.on{background:var(--navy);color:#f1d58a;border-color:var(--navy)}
+label{display:block;font-weight:600;font-size:13px;margin:12px 0 4px}input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff}
+td input,td select{min-width:120px}a.btn{text-decoration:none;color:inherit;display:inline-block}input:disabled,select:disabled{background:#f1efe8}.err-msg{display:none;background:#fdecea;color:var(--err);padding:9px 12px;border-radius:8px;margin-top:12px}.err-msg.show{display:block}
+.btn{border:0;border-radius:8px;padding:9px 16px;cursor:pointer;font-weight:600}.btn-primary,.btn-sign{display:inline-block}.btn-ghost{background:#fff;border:1px solid var(--line)}.btn-danger{background:var(--err);color:#fff}.btn[disabled]{opacity:.5;cursor:not-allowed}.full{width:100%;margin-top:16px}
+#app{display:none}#app.show{display:flex;flex-direction:column;min-height:100vh}
+.app-header{display:flex;align-items:center;gap:12px;padding:8px 18px;color:#fff;position:sticky;top:0;z-index:5}.hdr-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;flex:1}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--navy);display:grid;place-items:center;font-weight:700;font-size:13px}.hdr-user{font-size:13px;text-align:right;line-height:1.2}.hdr-user small{color:#aab3c5}
+.shell{display:flex;flex:1}.sidebar{width:210px;background:#fff;border-right:1px solid var(--line);padding:14px 10px}main{flex:1;padding:24px;min-width:0;max-width:1200px}
+.nav-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;background:none;border-radius:8px;cursor:pointer;text-align:left;color:var(--ink)}.nav-item:hover{background:#f4f1ea}
+.badge{margin-left:auto;background:var(--accent);color:var(--navy);border-radius:10px;padding:0 7px;font-size:12px;font-weight:700}.badge:empty{display:none}
+.bottom-nav{display:none}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px}.stat b{display:block;font-size:28px;color:var(--brand)}
+.subject-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}.subject-tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer}
+.bar{height:6px;background:#eee7d4;border-radius:4px;margin:8px 0}.bar i{display:block;height:100%;background:var(--brand);border-radius:4px}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-size:12px;text-transform:uppercase;color:var(--mute)}
+.cell{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;min-width:52px}.cell:hover{border-color:var(--accent)}
+.chip{display:inline-block;padding:1px 9px;border-radius:10px;font-size:12px;font-weight:600;background:#eee7d4}.chip.open{background:#fdecea;color:var(--err)}.chip.answered{background:#fff3d6;color:var(--warn)}.chip.closed,.chip.complete,.chip.signed{background:#e3f4ea;color:var(--ok)}
+.frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:4px 18px}.fld.bad input,.fld.bad select{border-color:var(--err);background:#fff6f5}.fld .q{font-size:12px;color:var(--err)}.fld .q.a{color:var(--warn)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.crumb{cursor:pointer;color:var(--brand);font-weight:600;margin-bottom:10px;display:inline-block}
+#modalOverlay{display:none;position:fixed;inset:0;background:rgba(8,19,37,.6);z-index:20;place-items:center;padding:16px}#modalOverlay.show{display:grid}#modalBox{background:#fff;border-radius:12px;padding:22px;width:100%;max-width:440px}
+#toasts{position:fixed;right:16px;top:70px;z-index:30;display:grid;gap:8px}.toast{background:var(--navy);color:#fff;padding:10px 14px;border-radius:8px;border-left:4px solid var(--accent);max-width:340px}.toast.err{border-color:var(--err)}.toast.ok{border-color:var(--ok)}
+@media(max-width:860px){#loginScreen{grid-template-columns:1fr}.login-left{padding:28px 22px}.sidebar{display:none}main{padding:16px 14px 90px}.hdr-user{display:none}
+.bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);z-index:6}.bn-item{flex:1;border:0;background:none;padding:9px 2px;font-size:11px;color:var(--mute);display:grid;justify-items:center}.bn-item.active{color:var(--brand);font-weight:700}}
+</style></head><body>
+<div id="loginScreen">
+ <div class="login-left"><img class="login-logo" src="logo.png" alt="TimeBoundary">
+  <h1>TB EDC Platform</h1><p>Learn how clinical trial data is captured: enter eCRFs, trigger edit checks, answer queries and review the audit trail, just like a real EDC.</p>
+  <div class="login-feature"><span class="ico">✓</span><span>Edit checks run on every save</span></div>
+  <div class="login-feature"><span class="ico">?</span><span>Queries between site and data manager</span></div>
+  <div class="login-feature"><span class="ico">≡</span><span>Full audit trail with reason for change</span></div></div>
+ <div class="login-right"><form class="login-box" id="loginForm"><h2>Sign in</h2><div class="mute">Practice logins</div>
+  <div class="role-tabs" id="roleTabs"><button type="button" class="on" data-u="trainee" data-p="Trainee@123">Data Manager</button><button type="button" data-u="site" data-p="Site@123">Site</button><button type="button" data-u="admin" data-p="Admin@123">Admin</button></div>
+  <label for="lu">Username</label><input id="lu" value="trainee" autocomplete="username"><label for="lp">Password</label><input id="lp" type="password" value="Trainee@123" autocomplete="current-password">
+  <div class="err-msg" id="loginError"></div><button class="btn btn-primary full" type="submit">Sign in</button>
+  <p class="mute">Practice tool. Do not enter real patient data.</p></form></div>
+</div>
+<div id="app"><header class="app-header"><div class="hdr-brand"><img class="hdr-mark" src="mark.png" alt=""><span>TB EDC</span></div><div class="hdr-user" id="hdrUser"></div><div class="avatar" id="hdrAv"></div><button class="btn btn-ghost" id="logoutBtn">Sign out</button></header>
+ <div class="shell"><nav class="sidebar" id="sideNav"></nav><main id="content"></main></div><nav class="bottom-nav" id="bottomNav"></nav></div>
+<div id="modalOverlay"><div id="modalBox"></div></div><div id="toasts"></div>
+<script>
+const $=id=>document.getElementById(id);
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+const p2=n=>String(n).padStart(2,'0'),nowTs=()=>{const d=new Date();return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+' '+p2(d.getHours())+':'+p2(d.getMinutes())},today=()=>nowTs().slice(0,10);
+const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const STUDY={id:'TB-001',title:'TB-001 Hypertension Phase II (practice)',sponsor:'TimeBoundary Research',start:'2026-01-01'};
+const VISITS=[{id:'SCR',n:'Screening'},{id:'BL',n:'Baseline'},{id:'W2',n:'Week 2'},{id:'EOS',n:'End of Study'}];
+const sel=(k,l,o,req)=>({k,l,t:'select',o,req}),num=(k,l,min,max,u)=>({k,l,t:'number',min,max,u,req:1});
+const FORMS={
+'Informed Consent':{v:['SCR'],f:[{k:'consentDate',l:'Consent date',t:'date',req:1},{k:'consentVer',l:'ICF version',t:'text',req:1}]},
+'Demography':{v:['SCR'],f:[{k:'initials',l:'Initials',t:'text',req:1},{k:'dob',l:'Date of birth',t:'date',req:1},sel('sex','Sex',['Male','Female'],1),sel('ethnicity','Ethnicity',['Hispanic or Latino','Not Hispanic or Latino'],1),sel('race','Race',['Asian','Black','White','Other'],1)]},
+'Vital Signs':{v:['SCR','BL','W2','EOS'],f:[{k:'date',l:'Assessment date',t:'date',req:1},num('sbp','Systolic BP',60,250,'mmHg'),num('dbp','Diastolic BP',30,150,'mmHg'),num('pulse','Pulse',30,220,'bpm'),num('temp','Temperature',30,45,'°C')]},
+'Adverse Events':{v:['W2','EOS'],f:[{k:'term',l:'AE term',t:'text',req:1},{k:'onset',l:'Onset date',t:'date',req:1},sel('severity','Severity',['Mild','Moderate','Severe'],1),sel('outcome','Outcome',['Recovered','Ongoing','Fatal'],0)]},
+'Medical History':{v:['SCR'],rep:1,f:[{k:'condition',l:'Condition',t:'text',req:1},{k:'startDate',l:'Start date',t:'date',req:1},sel('ongoing','Ongoing',['Yes','No'],1),{k:'endDate',l:'End date',t:'date'}]},
+'Concomitant Meds':{v:['SCR','BL','W2','EOS'],rep:1,f:[{k:'med',l:'Medication',t:'text',req:1},{k:'dose',l:'Dose',t:'text',req:1},sel('route','Route',['Oral','IV','Topical','Other'],1),{k:'startDate',l:'Start date',t:'date',req:1},{k:'endDate',l:'End date',t:'date'}]}};
+const FN=Object.keys(FORMS),fld=(fn,k)=>FORMS[fn].f.find(x=>x.k===k)||{l:k},TOTAL=FN.reduce((a,n)=>a+FORMS[n].v.length,0);
+const state={user:null,data:{subjects:[],forms:[],queries:[],audit:[]},view:{name:'dashboard'},qf:'all'};
+const fid=(s,v,n)=>'f_'+s+'_'+v+'_'+n.replace(/\s/g,''),getForm=(s,v,n)=>state.data.forms.find(f=>f.id===fid(s,v,n));
+const isDM=()=>state.user&&state.user.role==='dm',isSite=()=>state.user&&state.user.role==='site';
+const ageOf=d=>{if(!d)return null;const b=new Date(d),t=new Date();let a=t.getFullYear()-b.getFullYear();if(t<new Date(t.getFullYear(),b.getMonth(),b.getDate()))a--;return isNaN(a)?null:a};
+function toast(m,t){const e=document.createElement('div');e.className='toast '+(t||'');e.textContent=m;$('toasts').appendChild(e);setTimeout(()=>e.remove(),3800)}
+function showModal(h){$('modalBox').innerHTML=h;$('modalOverlay').classList.add('show')}function closeModal(){$('modalOverlay').classList.remove('show')}
+
+/* ---- Edit checks (run on save) ---- */
+function runEditChecks(fn,v){const out=[],F=FORMS[fn];if(!F)return out;v=v||{};const bad=k=>out.some(o=>o.key===k),add=(k,m)=>{if(!bad(k))out.push({key:k,name:fld(fn,k).l!==k?fld(fn,k).l:k.replace(/^r(\d+)_(.*)$/,(a,i,b)=>'Row '+(+i+1)+' '+fld(fn,b).l),msg:m})};
+ if(F.rep){(v.rows||[]).forEach((r,i)=>{const p='r'+i+'_',L=x=>'Row '+(i+1)+' '+x;
+  F.f.forEach(f=>{const x=String(r[f.k]||'').trim();if(!x){if(f.req)add(p+f.k,L(f.l)+' is required.');return}if(f.t==='date'&&x>today())add(p+f.k,L(f.l)+' cannot be in the future.')});
+  if(r.startDate&&r.endDate&&r.endDate<r.startDate)add(p+'endDate',L('End date')+' is before the start date.');
+  if(fn==='Medical History'&&r.ongoing==='Yes'&&r.endDate)add(p+'endDate',L('End date')+' must be empty when the condition is ongoing.')});return out}
+ F.f.forEach(f=>{const x=String(v[f.k]==null?'':v[f.k]).trim();if(!x){if(f.req)add(f.k,f.l+' is required.');return}
+  if(f.t==='number'){const n=Number(x);if(isNaN(n))add(f.k,f.l+' must be a number.');else if(n<f.min||n>f.max)add(f.k,f.l+' '+n+' is outside the range '+f.min+' to '+f.max+' '+f.u+'.')}
+  if(f.t==='date'&&x>today())add(f.k,f.l+' cannot be in the future.')});
+ if(fn==='Vital Signs'&&v.sbp&&v.dbp&&Number(v.dbp)>=Number(v.sbp))add('dbp','Diastolic must be lower than systolic.');
+ if(fn==='Informed Consent'&&v.consentDate&&v.consentDate<STUDY.start)add('consentDate','Consent date is before the study start ('+STUDY.start+').');
+ if(fn==='Demography'){if(v.initials&&!/^[A-Z]{2,3}$/.test(v.initials))add('initials','Initials must be 2 to 3 capital letters.');const a=ageOf(v.dob);if(a!=null&&(a<18||a>80))add('dob','Age '+a+' is outside the allowed range 18 to 80.')}
+ if(fn==='Adverse Events'&&v.onset&&v.onset<STUDY.start)add('onset','Onset is before the study start.');
+ return out}
+
+/* ---- Seed data ---- */
+function seedData(){const S=[],F=[],Q=[],A=[];let n=0;
+ const sub=(id,ini,dob,sex,eth,race,cd,st,site)=>S.push({id,screeningNum:'SCR-'+id.slice(-3),initials:ini,dob,sex,ethnicity:eth,race,consentDate:cd,status:st,site});
+ const frm=(s,v,fnm,fields,status)=>{const id=fid(s,v,fnm);F.push({id,subjectId:s,visitId:v,formName:fnm,fields,status});Object.keys(fields).forEach(k=>A.push({id:'seed_a'+(++n),formId:id,subjectId:s,formName:fnm,visitId:v,fieldKey:k,fieldName:fld(fnm,k).l,oldValue:'',newValue:fields[k],user:'site',ts:'2026-02-03 10:00',reason:'Initial data entry'}));return id};
+ const vs=(d,a,b,p,t)=>({date:d,sbp:a,dbp:b,pulse:p,temp:t});
+ sub('001-0001','AKR','1985-03-14','Male','Not Hispanic or Latino','Asian','2026-02-03','Enrolled','TB Site 01');
+ sub('001-0002','MPS','1979-07-22','Female','Not Hispanic or Latino','White','2026-02-05','Enrolled','TB Site 02');
+ sub('001-0003','JDL','','','','','','Screening','TB Site 01');
+ frm('001-0001','SCR','Informed Consent',{consentDate:'2026-02-03',consentVer:'v1.0'},'complete');
+ frm('001-0001','SCR','Demography',{initials:'AKR',dob:'1985-03-14',sex:'Male',ethnicity:'Not Hispanic or Latino',race:'Asian'},'complete');
+ frm('001-0001','SCR','Vital Signs',vs('2026-02-03',128,82,72,36.8),'complete');frm('001-0001','BL','Vital Signs',vs('2026-02-10',124,80,70,36.7),'complete');
+ frm('001-0002','SCR','Informed Consent',{consentDate:'2026-02-05',consentVer:'v1.0'},'complete');
+ frm('001-0002','SCR','Demography',{initials:'MPS',dob:'1979-07-22',sex:'Female',ethnicity:'Not Hispanic or Latino',race:'White'},'complete');
+ frm('001-0002','SCR','Vital Signs',vs('2026-02-05',132,84,76,36.9),'complete');
+ const f2=frm('001-0002','BL','Vital Signs',vs('2026-02-12',110,120,74,36.6),'incomplete');
+ Q.push({id:'seed_q1',formId:f2,subjectId:'001-0002',visitId:'BL',formName:'Vital Signs',fieldKey:'dbp',fieldName:'Diastolic BP',message:'Diastolic must be lower than systolic.',status:'open',openedBy:'system',openedAt:'2026-02-12 11:00',response:''});
+ return{subjects:S,forms:F,queries:Q,audit:A}}
+
+/* ---- Shell ---- */
+const NAV=[['dashboard','Dashboard','▦'],['subjects','Subjects','☺'],['queries','Queries','?'],['audit','Audit Trail','≡'],['users','Users','⚿'],['manage','Account','⚙']];
+const navItems=()=>NAV.filter(n=>n[0]!=='users'||(state.user&&state.user.admin));
+function renderHeader(){const u=state.user;$('hdrUser').innerHTML=esc(u.name)+'<br><small>'+esc(u.title)+'</small>';$('hdrAv').textContent=u.initials;
+ $('sideNav').innerHTML=navItems().map(n=>'<button class="nav-item" data-nav="'+n[0]+'"><span>'+n[2]+'</span>'+n[1]+(n[0]==='queries'?'<span class="badge" data-badge></span>':'')+'</button>').join('');
+ $('bottomNav').innerHTML=navItems().map(n=>'<button class="bn-item" data-nav="'+n[0]+'"><b>'+n[2]+'</b>'+n[1].split(' ')[0]+'</button>').join('');
+ document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>navTo(b.dataset.nav)))}
+function renderLogin(){$('app').classList.remove('show');$('loginScreen').style.display='';$('loginError').classList.remove('show');$('lp').value=''}
+function navTo(name,p){state.draftRows=null;if(name==='users')state.users=null;state.view=Object.assign({name},p||{});renderView();window.scrollTo(0,0)}
+function updateNavBadges(){const c=state.data.queries.filter(q=>q.status!=='closed').length;document.querySelectorAll('[data-badge]').forEach(e=>e.textContent=c||'')}
+function renderView(){const v=state.view.name,m={dashboard:viewDashboard,subjects:viewSubjects,subject:viewSubject,form:viewForm,queries:viewQueries,audit:viewAudit,manage:viewManage,users:viewUsers};
+ $('content').innerHTML=(m[v]||viewDashboard)();const act=v==='subject'||v==='form'?'subjects':v;
+ document.querySelectorAll('[data-nav]').forEach(b=>b.classList.toggle('active',b.dataset.nav===act));bindViewEvents();updateNavBadges()}
+
+/* ---- Views ---- */
+const qOpen=s=>state.data.queries.filter(q=>q.status!=='closed'&&(!s||q.subjectId===s)).length;
+const doneCount=s=>state.data.forms.filter(f=>f.subjectId===s&&(f.status==='complete'||f.status==='signed')).length;
+function viewDashboard(){const d=state.data,done=d.forms.filter(f=>f.status!=='incomplete').length;
+ return '<h2>'+esc(STUDY.title)+'</h2><p class="mute">Sponsor: '+esc(STUDY.sponsor)+'</p><div class="grid"><div class="stat"><b>'+d.subjects.length+'</b>Subjects</div><div class="stat"><b>'+done+'/'+d.forms.length+'</b>Forms complete</div><div class="stat"><b>'+qOpen()+'</b>Open queries</div><div class="stat"><b>'+d.forms.filter(f=>f.status==='signed').length+'</b>Signed forms</div></div>'
+ +'<div class="card scroll"><h3>Subjects</h3><table><tr><th>Subject</th><th>Initials</th><th>Site</th><th>Status</th><th>Forms</th><th>Queries</th></tr>'+d.subjects.map(s=>'<tr><td><a class="crumb" data-subj="'+esc(s.id)+'">'+esc(s.id)+'</a></td><td>'+esc(s.initials)+'</td><td>'+esc(s.site)+'</td><td>'+esc(s.status)+'</td><td>'+doneCount(s.id)+'/'+TOTAL+'</td><td>'+qOpen(s.id)+'</td></tr>').join('')+'</table></div>'}
+function viewSubjects(){return '<h2>Subjects</h2><div class="subject-grid">'+state.data.subjects.map(s=>{const p=Math.round(doneCount(s.id)/TOTAL*100),q=qOpen(s.id);
+ return '<div class="subject-tile" data-subj="'+esc(s.id)+'"><b>'+esc(s.id)+'</b> <span class="chip">'+esc(s.status)+'</span><div class="mute">'+esc(s.initials||'—')+' · '+esc(s.site)+'</div><div class="bar"><i style="width:'+p+'%"></i></div><span class="mute">'+p+'% complete</span>'+(q?' <span class="chip open">'+q+' open</span>':'')+'</div>'}).join('')+'</div>'}
+function cellFor(sid,vid,fn){if(!FORMS[fn].v.includes(vid))return '<span class="mute">·</span>';const f=getForm(sid,vid,fn),oq=f?state.data.queries.filter(q=>q.formId===f.id&&q.status!=='closed').length:0;
+ const ic=!f?'○':f.status==='signed'?'🔒':oq?'❓'+oq:f.status==='complete'?'✓':'◐';return '<button class="cell" data-open="'+esc(sid+'|'+vid+'|'+fn)+'">'+ic+'</button>'}
+function viewSubject(){const s=state.data.subjects.find(x=>x.id===state.view.sid);if(!s)return viewSubjects();const a=ageOf(s.dob);
+ return '<span class="crumb" data-go="subjects">← Subjects</span><div class="card"><h2>Subject '+esc(s.id)+'</h2><div class="mute">'+esc(s.screeningNum)+' · '+esc(s.initials||'—')+' · '+esc(s.sex||'—')+' · '+(a==null?'null yrs':a+' yrs')+' · '+esc(s.site)+' · Consent: '+esc(s.consentDate||'—')+'</div></div>'
+ +'<div class="card scroll"><h3>Visit × form matrix</h3><table><tr><th>Form</th>'+VISITS.map(v=>'<th>'+v.n+'</th>').join('')+'</tr>'+FN.map(fn=>'<tr><td>'+fn+'</td>'+VISITS.map(v=>'<td>'+cellFor(s.id,v.id,fn)+'</td>').join('')+'</tr>').join('')+'</table><p class="mute">○ not started · ◐ incomplete · ❓ open queries · ✓ complete · 🔒 signed</p></div>'}
+function viewForm(){const {sid,vid,fn}=state.view,F=FORMS[fn];if(!F)return viewSubjects();const f=getForm(sid,vid,fn),v=f?f.fields:{},locked=f&&f.status==='signed',qs=f?state.data.queries.filter(q=>q.formId===f.id&&q.status!=='closed'):[];
+ const vn=VISITS.find(x=>x.id===vid).n,st=f?f.status:'not started';
+ const fields=F.rep?repTable(fn,f,qs,locked):F.f.map(x=>{const q=qs.find(z=>z.fieldKey===x.k),val=v[x.k]==null?'':v[x.k],dis=locked?' disabled':'';let inp;
+  if(x.t==='select')inp='<select data-k="'+x.k+'"'+dis+'><option value=""></option>'+x.o.map(o=>'<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select>';
+  else inp='<input data-k="'+x.k+'" type="'+(x.t==='number'?'number" step="any':x.t)+'" value="'+esc(val)+'"'+dis+'>';
+  return '<div class="fld'+(q?' bad':'')+'"><label>'+x.l+(x.u?' ('+x.u+')':'')+(x.req?' *':'')+'</label>'+inp+(q?'<div class="q'+(q.status==='answered'?' a':'')+'">'+esc(q.message)+(q.response?' · Site: '+esc(q.response):'')+'</div>':'')+'</div>'}).join('');
+ return '<span class="crumb" data-back>← Subject '+esc(sid)+'</span><div class="card"><h2>'+fn+' <span class="chip '+(f?f.status:'')+'">'+st+'</span></h2><div class="mute">'+esc(sid)+' · '+vn+(locked?' · Signed and locked':'')+'</div>'
+ +'<form id="ecrfForm" data-form-id="'+esc(f?f.id:'')+'" data-form-name="'+esc(fn)+'" onsubmit="return false"><div class="frow">'+fields+'</div><div class="actions">'
+ +(locked?'':'<button type="button" class="btn btn-primary" id="saveBtn">Save</button>')+(isDM()&&f&&f.status==='complete'?'<button type="button" class="btn btn-sign" id="signBtn">Sign and lock</button>':'')+(isDM()&&locked?'<button type="button" class="btn btn-danger" id="unlockBtn">Unlock</button>':'')+'</div></form></div>'}
+function repTable(fn,f,qs,locked){const F=FORMS[fn],key=fid(state.view.sid,state.view.vid,fn),rows=state.draftKey===key&&state.draftRows?state.draftRows:((f&&f.fields.rows)||[]);
+ const cell=(r,i,x)=>{const q=qs.find(z=>z.fieldKey==='r'+i+'_'+x.k),val=r[x.k]==null?'':r[x.k],dis=locked?' disabled':'',
+  inp=x.t==='select'?'<select data-k="'+x.k+'"'+dis+'><option value=""></option>'+x.o.map(o=>'<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select>':'<input data-k="'+x.k+'" type="'+x.t+'" value="'+esc(val)+'"'+dis+'>';
+  return '<td class="fld'+(q?' bad':'')+'">'+inp+(q?'<div class="q'+(q.status==='answered'?' a':'')+'">'+esc(q.message)+'</div>':'')+'</td>'};
+ return '<div style="grid-column:1/-1" class="scroll"><table><tr><th>#</th>'+F.f.map(x=>'<th>'+x.l+(x.req?' *':'')+'</th>').join('')+'<th></th></tr>'+(rows.length?rows.map((r,i)=>'<tr data-row="'+i+'"><td>'+(i+1)+'</td>'+F.f.map(x=>cell(r,i,x)).join('')+'<td>'+(locked?'':'<button type="button" class="btn btn-ghost" data-rm="'+i+'">✕</button>')+'</td></tr>').join(''):'<tr><td colspan="'+(F.f.length+2)+'" class="mute">No entries yet. Add a row, or save with no rows if there is nothing to record.</td></tr>')+'</table>'+(locked?'':'<p><button type="button" class="btn btn-ghost" id="addRowBtn">+ Add row</button></p>')+'</div>'}
+function viewQueries(){const L=state.data.queries.filter(q=>state.qf==='all'||q.status===state.qf);
+ return '<h2>Queries</h2><div class="role-tabs">'+['all','open','answered','closed'].map(s=>'<button class="'+(state.qf===s?'on':'')+'" data-qf="'+s+'">'+s+'</button>').join('')+'</div>'
+ +(L.length?L.map(q=>'<div class="card"><span class="chip '+q.status+'">'+q.status+'</span> <b>'+esc(q.subjectId)+'</b> · '+esc(q.visitId)+' · '+esc(q.formName)+' · '+esc(q.fieldName)+'<p>'+esc(q.message)+'</p>'+(q.response?'<p class="mute">Site: '+esc(q.response)+'</p>':'')+(q.closedReason?'<p class="mute">'+esc(q.closedReason)+'</p>':'')
+  +'<div class="actions"><button class="btn btn-ghost" data-qopen="'+esc(q.id)+'">Open form</button>'+(isSite()&&q.status==='open'?'<button class="btn btn-primary" data-qa="respond" data-id="'+esc(q.id)+'">Respond</button>':'')+(isDM()&&q.status!=='closed'?'<button class="btn btn-sign" data-qa="close" data-id="'+esc(q.id)+'">Close</button>':'')+(isDM()&&q.status==='answered'?'<button class="btn btn-ghost" data-qa="reopen" data-id="'+esc(q.id)+'">Re-open</button>':'')+'</div></div>').join(''):'<div class="card mute">No queries.</div>')}
+function viewAudit(){const L=state.data.audit.slice().reverse();return '<h2>Audit trail</h2><div class="card scroll"><table><tr><th>When</th><th>User</th><th>Subject / form</th><th>Field</th><th>Old → New</th><th>Reason</th></tr>'+L.map(a=>'<tr><td>'+esc(a.ts)+'</td><td>'+esc(a.user)+'</td><td>'+esc(a.subjectId)+' · '+esc(a.visitId)+' · '+esc(a.formName)+'</td><td>'+esc(a.fieldName)+'</td><td><code>'+(esc(a.oldValue)||'—')+'</code> → <code>'+(esc(a.newValue)||'—')+'</code></td><td>'+esc(a.reason)+'</td></tr>').join('')+'</table></div>'}
+function viewManage(){const u=state.user;return '<h2>Account and data</h2><div class="card"><h3>Change password</h3><div class="frow"><div><label>Current password</label><input id="pwO" type="password" autocomplete="current-password"></div><div><label>New password (8+ characters)</label><input id="pwN" type="password" autocomplete="new-password"></div></div><div class="actions"><button class="btn btn-primary" id="pwBtn">Change password</button></div></div>'
+ +(isDM()?'<div class="card"><h3>Export</h3><p class="mute">Download entered data or the audit trail as CSV (opens in Excel).</p><div class="actions"><a class="btn btn-ghost" href="/api/export.csv">Data CSV</a><a class="btn btn-ghost" href="/api/audit.csv">Audit trail CSV</a></div></div>':'')
+ +(u.admin?'<div class="card"><h3>Reset</h3><p class="mute">Reset all practice data to the starting set. The server backs up the database automatically in the data\\backups folder.</p><button class="btn btn-danger" id="resetBtn">Reset practice data</button></div>':'')}
+function viewUsers(){if(!state.users){api('GET','/api/users').then(r=>{if(r.error)toast(r.error,'err');else{state.users=r;renderView()}});return '<p class="mute">Loading...</p>'}
+ return '<h2>Users</h2><div class="card scroll"><table><tr><th>Username</th><th>Name</th><th>Role</th><th></th></tr>'+state.users.map(u=>'<tr><td>'+esc(u.username)+'</td><td>'+esc(u.name)+'</td><td>'+esc(u.title)+'</td><td><button class="btn btn-ghost" data-ureset="'+esc(u.username)+'">Reset password</button></td></tr>').join('')+'</table></div>'
+ +'<div class="card"><h3>Add user</h3><div class="frow"><div><label>Username</label><input id="nuU" autocomplete="off"></div><div><label>Full name</label><input id="nuN"></div><div><label>Role</label><select id="nuR"><option value="dm">Data Manager</option><option value="site">Site Coordinator</option></select></div><div><label>Temporary password (8+ characters)</label><input id="nuP" type="password" autocomplete="new-password"></div></div><div class="actions"><button class="btn btn-primary" id="uCreate">Create user</button></div></div>'}
+async function createUser(){const r=await api('POST','/api/users',{username:$('nuU').value,name:$('nuN').value,role:$('nuR').value,password:$('nuP').value});if(r.error){toast(r.error,'err');return}toast('User created.','ok');state.users=null;renderView()}
+async function resetUser(u){const p=prompt('New password for '+u+' (8+ characters)');if(!p)return;const r=await api('POST','/api/users/reset',{username:u,password:p});r.error?toast(r.error,'err'):toast('Password reset.','ok')}
+async function changePw(){const r=await api('POST','/api/password',{old:$('pwO').value,new:$('pwN').value});if(r.error){toast(r.error,'err');return}$('pwO').value=$('pwN').value='';toast('Password changed.','ok')}
+
+/* ---- Actions ---- */
+function bindViewEvents(){const on=(s,f)=>document.querySelectorAll(s).forEach(e=>e.addEventListener('click',()=>f(e)));
+ on('[data-subj]',e=>navTo('subject',{sid:e.dataset.subj}));on('[data-go]',e=>navTo(e.dataset.go));on('[data-back]',()=>navTo('subject',{sid:state.view.sid}));
+ on('[data-open]',e=>{const [sid,vid,fn]=e.dataset.open.split('|');navTo('form',{sid,vid,fn})});
+ on('[data-qopen]',e=>{const q=state.data.queries.find(x=>x.id===e.dataset.qopen);if(q)navTo('form',{sid:q.subjectId,vid:q.visitId,fn:q.formName})});
+ on('[data-qf]',e=>{state.qf=e.dataset.qf;renderView()});on('[data-qa]',e=>queryAction(e.dataset.qa,e.dataset.id));
+ on('#saveBtn',handleSave);on('#addRowBtn',addRow);on('#uCreate',createUser);on('[data-ureset]',e=>resetUser(e.dataset.ureset));on('#pwBtn',changePw);on('[data-rm]',e=>removeRow(+e.dataset.rm));on('#signBtn',()=>handleSign());on('#unlockBtn',()=>handleUnlock());on('#resetBtn',()=>{if(confirm('Reset all practice data?'))resetData()})}
+function queryAction(a,id){const q=state.data.queries.find(x=>x.id===id);if(!q)return;
+ if(a==='respond'){const t=(prompt('Your response to the query')||'').trim();if(!t)return;q.status='answered';q.response=t}
+ else if(a==='close'){q.status='closed';q.closedReason=(prompt('Reason for closing','Resolved')||'Resolved').trim()}
+ else if(a==='reopen'){q.status='open';q.response=''}
+ saveData();renderView()}
+const collectRows=()=>{const rows=[];document.querySelectorAll('#ecrfForm tr[data-row]').forEach(tr=>{const r={};tr.querySelectorAll('[data-k]').forEach(e=>r[e.dataset.k]=e.value.trim());rows.push(r)});return rows};
+function addRow(){const {sid,vid,fn}=state.view;state.draftKey=fid(sid,vid,fn);state.draftRows=collectRows().concat([{}]);renderView()}
+function removeRow(i){const {sid,vid,fn}=state.view,r=collectRows();r.splice(i,1);state.draftKey=fid(sid,vid,fn);state.draftRows=r;renderView()}
+function diffs(fn,ov,nv){const F=FORMS[fn],d=[];ov=ov||{};
+ if(F.rep){const a=ov.rows||[],b=nv.rows||[];for(let i=0;i<Math.max(a.length,b.length);i++)F.f.forEach(f=>{const o=String((a[i]||{})[f.k]||''),n=String((b[i]||{})[f.k]||'');if(o!==n)d.push({k:'r'+i+'_'+f.k,name:'Row '+(i+1)+' '+f.l,o,n})})}
+ else F.f.forEach(f=>{const o=String(ov[f.k]||''),n=String(nv[f.k]||'');if(o!==n)d.push({k:f.k,name:f.l,o,n})});return d}
+function handleSave(){const {sid,vid,fn}=state.view,F=FORMS[fn],f=getForm(sid,vid,fn);let nv={};
+ if(F.rep)nv={rows:collectRows().filter(r=>Object.values(r).some(x=>x))};else document.querySelectorAll('#ecrfForm [data-k]').forEach(e=>nv[e.dataset.k]=e.value.trim());
+ let d=diffs(fn,f?f.fields:{},nv);if(!d.length&&F.rep&&!f)d=[{k:'__rows__',name:'Rows',o:'',n:'No entries'}];
+ if(!d.length){toast('No changes to save.','warn');return}
+ if(!d.some(x=>x.o))return commit(nv,d,'Initial data entry');
+ showModal('<h3>Reason for change</h3><p class="mute">You changed saved data. Choose a reason (audit trail).</p><select id="rcR"><option>Data entry error</option><option>Transcription error</option><option>Site clarification</option><option>Query response</option><option>Other</option></select><label>Note</label><textarea id="rcN" rows="2"></textarea><div class="actions"><button class="btn btn-ghost" id="rcX">Cancel</button><button class="btn btn-primary" id="rcOk">Confirm</button></div>');
+ $('rcX').onclick=closeModal;$('rcOk').onclick=()=>{const r=$('rcR').value,n=$('rcN').value.trim();if(r==='Other'&&!n){toast('Add a note for "Other".','err');return}commit(nv,d,r+(n?': '+n:''))}}
+function commit(nv,d,reason){const {sid,vid,fn}=state.view;let f=getForm(sid,vid,fn);
+ if(!f){f={id:fid(sid,vid,fn),subjectId:sid,visitId:vid,formName:fn,fields:{},status:'incomplete'};state.data.forms.push(f)}
+ d.forEach(x=>state.data.audit.push({id:uid('a'),formId:f.id,subjectId:sid,formName:fn,visitId:vid,fieldKey:x.k,fieldName:x.name,oldValue:x.o,newValue:x.n,user:state.user.username,ts:nowTs(),reason}));
+ f.fields=nv;const fails=runEditChecks(fn,nv),keys=fails.map(x=>x.key);
+ fails.forEach(x=>{if(!state.data.queries.some(q=>q.formId===f.id&&q.fieldKey===x.key&&q.status!=='closed'))state.data.queries.push({id:uid('q'),formId:f.id,subjectId:sid,visitId:vid,formName:fn,fieldKey:x.key,fieldName:x.name,message:x.msg,status:'open',openedBy:'system',openedAt:nowTs(),response:''})});
+ let auto=0;state.data.queries.forEach(q=>{if(q.formId===f.id&&q.status!=='closed'&&!keys.includes(q.fieldKey)){q.status='closed';q.closedBy='system';q.closedReason='Data corrected; edit check now passes.';auto++}});
+ f.status=fails.length?'incomplete':'complete';state.draftRows=null;saveData();closeModal();
+ toast(fails.length?'Saved. '+fails.length+' edit check(s) failed and a query was raised.':'Saved. All edit checks passed'+(auto?' and '+auto+' query auto-closed.':'.'),fails.length?'warn':'ok');renderView()}
+
+/* ---- Wiring ---- */
+$('roleTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;document.querySelectorAll('#roleTabs button').forEach(x=>x.classList.toggle('on',x===b));$('lu').value=b.dataset.u;$('lp').value=b.dataset.p});
+$('loginForm').addEventListener('submit',e=>{e.preventDefault();login($('lu').value.trim(),$('lp').value)});
+$('logoutBtn').addEventListener('click',()=>{state.user=null;renderLogin()});
+$('modalOverlay').addEventListener('click',e=>{if(e.target.id==='modalOverlay')closeModal()});
+setInterval(()=>{if(state.user&&state.view.name!=='form'&&typeof refresh==='function')refresh()},15000);
+</script>
+<script src="backend.js"></script>
+</body></html>

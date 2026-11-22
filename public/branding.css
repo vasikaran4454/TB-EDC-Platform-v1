@@ -1,0 +1,12 @@
+/* TimeBoundary EDC Platform - navy and gold theme (matches the TB emblem) */
+:root{--navy:#081325;--navy-2:#0f1f3a;--brand:#9a6f12;--brand-2:#b5851f;--accent:#e2b550;--bg:#f4f1ea;--line:#e2dccb;--ink:#1c2433;--mute:#6b7280;--ok:#1f8a4c;--warn:#b7791f;--err:#c0392b}
+.login-left{background:var(--navy)}
+.login-logo{display:block;width:min(300px,68%);height:auto;border-radius:50%;margin:0 0 1.5rem;box-shadow:0 0 70px rgba(226,181,80,.22)}
+.login-left h1{color:#f1d58a}
+.hdr-mark{height:38px;width:38px;border-radius:50%;display:block}
+.app-header{background:var(--navy);box-shadow:0 1px 0 rgba(226,181,80,.35)}
+.hdr-brand span{letter-spacing:.04em;color:#f1d58a}
+.nav-item.active{background:var(--navy);color:#f1d58a}
+.btn-primary,.btn-sign{background:var(--brand);color:#fff}
+.btn-primary:hover,.btn-sign:hover{background:var(--brand-2)}
+.subject-tile:hover{border-color:var(--accent)}
